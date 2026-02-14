@@ -38,7 +38,7 @@ export default function AboutSection() {
   };
 
   return (
-    <section id="about" className="pt-48 pb-50 px-4 bg-bg-page transition-colors duration-300 flex items-center">
+    <section id="about" className="pt-32 pb-50 px-4 bg-bg-page transition-colors duration-300 flex items-center">
       <div className="max-w-6xl mx-auto" ref={heroRef}>
         <div className="flex flex-col lg:flex-row items-start gap-8">
           <div className="flex-1">

@@ -49,7 +49,7 @@ export default function ExperienceSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section id="experience" className="py-24 px-6 bg-bg-page transition-colors duration-300" ref={sectionRef}>
+    <section id="experience" className="mt-12 py-24 px-6 bg-bg-page transition-colors duration-300" ref={sectionRef}>
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
         
         {/* Professional Experience Column */}
