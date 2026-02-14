@@ -75,7 +75,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           
           {/* Left Column: Mission Statement */}
           <div className="flex flex-col justify-center">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-text-main leading-tight tracking-tighter uppercase mb-8">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-text-main leading-tight tracking-tighter uppercase mb-8">
               {title}
             </h1>
             <div className="space-y-4">
