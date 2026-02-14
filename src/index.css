@@ -2,57 +2,66 @@
 
 @theme {
   /* --- Brand Identity --- */
-  /* Consistent blue used for GCS. logo and interactive elements */
   --color-brand-primary: #3B82F6;
   --color-brand-primary-hover: #2563EB;
 
   /* --- Semantic Theme Variables --- */
-  /* These variables reactive to the .dark class toggle */
   --color-bg-page: var(--bg-page);
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
   --color-border-subtle: var(--border-subtle);
   --color-navbar-bg: var(--navbar-bg);
+  
+  /* --- Typography --- */
+  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Inter Tight', sans-serif;
 }
 
-/* --- Light Theme Configuration (Default) --- */
+/* --- Theme Configurations --- */
 :root {
-  --bg-page: #ffffff;         /* Pure white for maximum contrast */
-  --text-main: #0f172a;       /* Slate-900: Deep Navy/Black for sharp text */
-  --text-muted: #475569;      /* Slate-600: Solid gray for taglines */
-  --border-subtle: #e2e8f0;    /* Slate-200: Light borders for the navbar */
-  --navbar-bg: rgba(255, 255, 255, 1); /* Solid white with backdrop blur for light mode */
+  --bg-page: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-subtle: #e2e8f0;
+  --navbar-bg: rgba(255, 255, 255, 1);
   color-scheme: light;
+  scroll-behavior: smooth;
 }
 
-/* --- Dark Theme Configuration --- */
 .dark {
-  --bg-page: #020617;         /* Deep Navy Dark background from Hero design */
-  --text-main: #f1f5f9;       /* Slate-100: Crisp light text */
-  --text-muted: #94a3b8;      /* Slate-400: Muted light slate */
-  --border-subtle: #1e293b;    /* Slate-800: Subtle dark borders */
-  --navbar-bg: rgba(0, 0, 0, 0.4); /* Translucent glassmorphism */
+  --bg-page: #020617;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-subtle: #1e293b;
+  --navbar-bg: rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
 
 /* --- Global Base Styles --- */
 @layer base {
   body {
-    /* Anchors the body to our reactive theme variables */
     background-color: var(--bg-page);
     color: var(--text-main);
-    
-    /* Smooth 300ms transition for theme switching */
     @apply antialiased transition-colors duration-300;
   }
 
-  /* Syncs all default borders to our theme */
+  /* Universal theme-synced borders */
   *, ::after, ::before {
     border-color: var(--border-subtle);
   }
 
-  /* Custom selection color using your brand blue */
+  /* Custom Selection Color */
   ::selection {
-    @apply bg-brand-primary/30 text-text-main;
+    background-color: rgba(59, 130, 246, 0.3);
+    color: var(--text-main);
+  }
+
+  /* Hide scrollbar for architectural purity while maintaining functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
