@@ -63,7 +63,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   ];
 
   return (
-    <section id="contact" className="relative min-h-screen w-full overflow-hidden bg-bg-page transition-colors duration-300">
+    <section id="contact" className="relative min-h-screen w-full overflow-hidden bg-bg-page transition-colors duration-300 mt-6 py-16">
       {/* Background with Grid Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-10 grayscale"
