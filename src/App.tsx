@@ -1,12 +1,15 @@
 import { Navbar } from "@/components/ui/navbar"
 import Hero from "@/components/hero"
+import AboutSection from "./components/ui/about-section-2"
+import ExperienceSection from "./components/experience"
 
 function App() {
   return (
     <div className="relative">
       <Navbar />
       <Hero />
-      {/* Education & Experience sections will go here */}
+      <AboutSection />
+      <ExperienceSection />
     </div>
   )
 }

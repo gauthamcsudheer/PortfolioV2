@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import profileImg from "@/assets/profile.jpg";
 
-// --- BlurText Animation Component ---
 interface BlurTextProps {
   text: string;
   delay?: number;
@@ -67,28 +66,28 @@ export default function Hero() {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove); // Fixed Typo
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
     <div className={cn(
-      "relative min-h-screen overflow-hidden transition-colors duration-300",
+      "relative overflow-hidden transition-colors duration-300",
       "bg-bg-page text-text-main" 
     )}>
       {/* Background Engineering Grid */}
-      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.1] pointer-events-none" 
+      <div className="absolute inset-0 z-0 opacity-[0.075] dark:opacity-[0.1] pointer-events-none" 
            style={{ backgroundImage: `linear-gradient(var(--color-brand-primary) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand-primary) 1px, transparent 1px)`, 
            backgroundSize: '40px 40px' }} />
 
-      {/* Interactive Spotlight */}
       <div className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-500"
            style={{ background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(59, 130, 246, 0.04), transparent 80%)` }} />
 
-      <main className="relative z-10 min-h-screen flex flex-col items-center justify-center md:justify-start px-4 md:pt-32">
+      {/* Tightened Top Padding: Reduced pt-48 to pt-32 on desktop */}
+      <main className="relative z-10 flex flex-col items-center px-4 pt-60 pb-48 md:pt-28 lg:pt-16">
         
-        {/* Super Condensed Name Stack */}
         <div className="relative text-center w-full max-w-7xl">
-          <div className="flex flex-col items-center space-y-24 md:-space-y-10 lg:-space-y-12">
+          {/* Compressed name stack for a more "architectural" fit */}
+          <div className="flex flex-col items-center space-y-20 md:-space-y-12 lg:-space-y-16">
             <BlurText
               text="GAUTHAM"
               delay={80}
@@ -112,7 +111,6 @@ export default function Hero() {
             />
           </div>
 
-          {/* Profile Picture Overlay */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <div className={cn(
               "w-[95px] h-[160px] sm:w-[120px] sm:h-[200px] md:w-[130px] md:h-[235px] lg:w-[150px] lg:h-[250px] rounded-full border-4 overflow-hidden transition-all duration-500 hover:scale-110 grayscale hover:grayscale-0",
@@ -123,8 +121,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Tagline using High-Contrast Semantic Variables */}
-        <div className="mt-12 md:mt-4 max-w-2xl px-6 text-center">
+        <div className="mt-12 md:mt-6 max-w-2xl px-6 text-center">
           <BlurText
             text="Architecting scalable web solutions with machine intelligence."
             delay={100}
