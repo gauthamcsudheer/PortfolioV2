@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Experience = require('../models/Experience');
+const protect = require('../middleware/auth');
 
-// GET all sorted by orderIndex
+// GET all milestones (Public)
 router.get('/', async (req, res) => {
   try {
     const items = await Experience.find().sort('orderIndex');
@@ -12,8 +13,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new item (Work or Education)
-router.post('/', async (req, res) => {
+// POST a new milestone (Protected)
+router.post('/', protect, async (req, res) => {
   const item = new Experience(req.body);
   try {
     const newItem = await item.save();
@@ -23,8 +24,27 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT: Update an existing milestone
-router.put('/:id', async (req, res) => {
+// PUT: Reorder items
+router.put('/reorder', protect, async (req, res) => {
+  const { orders } = req.body;
+
+  try {
+    const bulkOps = orders.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { orderIndex: item.index } },
+      },
+    }));
+
+    await Experience.bulkWrite(bulkOps); 
+    res.json({ message: "Timeline hierarchy updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT: Update an existing milestone (Protected)
+router.put('/:id', protect, async (req, res) => {
   try {
     const updated = await Experience.findByIdAndUpdate(
       req.params.id, 
@@ -37,8 +57,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE: Remove a milestone
-router.delete('/:id', async (req, res) => {
+// DELETE a milestone (Protected)
+router.delete('/:id', protect, async (req, res) => {
   try {
     await Experience.findByIdAndDelete(req.params.id);
     res.json({ message: "Milestone deleted" });

@@ -11,7 +11,9 @@ import { ContactSection } from './components/contact';
 import { StackedCircularFooter } from './components/ui/stacked-circular-footer';
 
 // Admin Component
+import LoginPage from './pages/Login';
 import AdminPage from './pages/Admin';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 /**
  * Main Portfolio Layout
@@ -35,12 +37,16 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Portfolio Route */}
         <Route path="/" element={<PortfolioLayout />} />
-
-        {/* Admin Management Route */}
-        {/* In the future, you can wrap this in a ProtectedRoute component for JWT auth */}
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

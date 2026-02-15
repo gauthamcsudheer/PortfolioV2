@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   DndContext,
   closestCenter,
@@ -20,9 +21,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Trash2, GripVertical, Mail, Briefcase, Plus, X, 
-  Loader2, Edit2, GraduationCap, History 
+import {
+  Trash2, GripVertical, Mail, Briefcase, Plus, X,
+  Loader2, Edit2, GraduationCap, History, LogOut
 } from "lucide-react";
 
 // --- Sortable Item Component ---
@@ -45,17 +46,16 @@ function SortableItem({ id, children }: { id: string; children: React.ReactNode 
 }
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"projects" | "timeline" | "messages">("projects");
-  
-  // Form Control States
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Dynamic Form States
   const [projData, setProjData] = useState({ title: "", description: "", tags: "", link: "", imgSrc: "" });
   const [timeData, setTimeData] = useState({ type: "work", year: "", title: "", subtitle: "", description: "", tags: "" });
 
@@ -64,22 +64,39 @@ export default function AdminPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  useEffect(() => { fetchData(); }, []);
+  // --- Auth Helpers ---
+  const getAuthHeaders = () => ({
+    "Content-Type": "application/json",
+    "x-auth-token": localStorage.getItem("token") || "",
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem("token");
       const [p, t, c] = await Promise.all([
         fetch("http://localhost:3000/api/projects"),
         fetch("http://localhost:3000/api/experience"),
-        fetch("http://localhost:3000/api/contacts"),
+        fetch("http://localhost:3000/api/contacts", {
+          headers: { "x-auth-token": token || "" }
+        }),
       ]);
+
+      if (c.status === 401) return handleLogout();
+
       setProjects(await p.json());
       setTimeline(await t.json());
       setContacts(await c.json());
     } catch (err) { console.error("Sync failed:", err); }
   };
-
-  // --- Handlers ---
 
   const resetForms = () => {
     setIsFormOpen(false);
@@ -103,10 +120,10 @@ export default function AdminPage() {
     e.preventDefault();
     setLoading(true);
     const isProj = activeTab === 'projects';
-    
+
     const url = `http://localhost:3000/api/${isProj ? 'projects' : 'experience'}${editingId ? `/${editingId}` : ''}`;
     const method = editingId ? "PUT" : "POST";
-    
+
     const body = isProj ? {
       ...projData,
       tags: projData.tags.split(",").map(t => t.trim()),
@@ -118,15 +135,25 @@ export default function AdminPage() {
     };
 
     try {
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body)
+      });
+
       if (res.ok) { resetForms(); fetchData(); }
+      if (res.status === 401) handleLogout();
     } finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string, endpoint: string) => {
     if (!window.confirm("Confirm deletion?")) return;
-    const res = await fetch(`http://localhost:3000/api/${endpoint}/${id}`, { method: "DELETE" });
+    const res = await fetch(`http://localhost:3000/api/${endpoint}/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders()
+    });
     if (res.ok) fetchData();
+    if (res.status === 401) handleLogout();
   };
 
   const onDragEnd = async (event: DragEndEvent, type: 'projects' | 'experience') => {
@@ -136,30 +163,54 @@ export default function AdminPage() {
     const list = type === 'projects' ? projects : timeline;
     const oldIdx = list.findIndex(i => i._id === active.id);
     const newIdx = list.findIndex(i => i._id === over.id);
-    const newOrder = arrayMove(list, oldIdx, newIdx);
 
+    // 1. Update UI immediately for "Optimistic" feel
+    const newOrder = arrayMove(list, oldIdx, newIdx);
     type === 'projects' ? setProjects(newOrder) : setTimeline(newOrder);
 
-    await fetch(`http://localhost:3000/api/${type}/reorder`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orders: newOrder.map((item, index) => ({ id: item._id, index })) }),
-    });
+    // 2. Map the new order to a simple ID -> Index array
+    const orderMapping = newOrder.map((item, index) => ({
+      id: item._id,
+      index: index
+    }));
+
+    // 3. Persist to Database
+    try {
+      const endpoint = type === 'projects' ? 'projects' : 'experience';
+      const res = await fetch(`http://localhost:3000/api/${endpoint}/reorder`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ orders: orderMapping }),
+      });
+
+      if (!res.ok) {
+        // If server fails, refresh data to revert UI to last known state
+        fetchData();
+        console.error("Reorder failed on server");
+      }
+    } catch (err) {
+      fetchData();
+      console.error("Network error during reorder");
+    }
   };
 
   return (
     <div className="min-h-screen bg-bg-page text-text-main pt-24 pb-20 px-6">
       <div className="max-w-5xl mx-auto">
         <header className="mb-12">
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-4 italic">Command Center</h1>
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Command Center</h1>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-text-muted hover:text-red-500 gap-2">
+              <LogOut size={14} /> Exit
+            </Button>
+          </div>
           <div className="flex gap-6 border-b border-border-subtle">
             {["projects", "timeline", "messages"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab as any); resetForms(); }}
-                className={`pb-4 text-xs font-black uppercase tracking-[0.2em] transition-all ${
-                  activeTab === tab ? "border-b-2 border-brand-primary text-brand-primary" : "text-text-muted hover:text-text-main"
-                }`}
+                className={`pb-4 text-xs font-black uppercase tracking-[0.2em] transition-all ${activeTab === tab ? "border-b-2 border-brand-primary text-brand-primary" : "text-text-muted hover:text-text-main"
+                  }`}
               >
                 {tab}
               </button>
@@ -189,45 +240,44 @@ export default function AdminPage() {
                   </span>
                   <button onClick={resetForms} className="text-text-muted hover:text-text-main"><X size={20} /></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {activeTab === 'timeline' && (
                     <div className="md:col-span-2 flex gap-3">
                       {['work', 'education'].map(t => (
-                        <button key={t} type="button" onClick={() => setTimeData({...timeData, type: t})}
-                          className={`px-6 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${
-                            timeData.type === t ? "bg-brand-primary border-brand-primary text-white" : "border-border-subtle text-text-muted"
-                          }`}>{t}</button>
+                        <button key={t} type="button" onClick={() => setTimeData({ ...timeData, type: t })}
+                          className={`px-6 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${timeData.type === t ? "bg-brand-primary border-brand-primary text-white" : "border-border-subtle text-text-muted"
+                            }`}>{t}</button>
                       ))}
                     </div>
                   )}
 
-                  <Input required placeholder="Main Title" value={activeTab === 'projects' ? projData.title : timeData.title} 
-                    onChange={e => activeTab === 'projects' ? setProjData({...projData, title: e.target.value}) : setTimeData({...timeData, title: e.target.value})} />
-                  
-                  <Input required placeholder={activeTab === 'projects' ? "Tags (CSV)" : "Subtitle / Org"} 
+                  <Input required placeholder="Main Title" value={activeTab === 'projects' ? projData.title : timeData.title}
+                    onChange={e => activeTab === 'projects' ? setProjData({ ...projData, title: e.target.value }) : setTimeData({ ...timeData, title: e.target.value })} />
+
+                  <Input required placeholder={activeTab === 'projects' ? "Tags (CSV)" : "Subtitle / Org"}
                     value={activeTab === 'projects' ? projData.tags : timeData.subtitle}
-                    onChange={e => activeTab === 'projects' ? setProjData({...projData, tags: e.target.value}) : setTimeData({...timeData, subtitle: e.target.value})} />
+                    onChange={e => activeTab === 'projects' ? setProjData({ ...projData, tags: e.target.value }) : setTimeData({ ...timeData, subtitle: e.target.value })} />
 
                   {activeTab === 'projects' ? (
                     <>
-                      <Input placeholder="Unsplash URL" value={projData.imgSrc} onChange={e => setProjData({...projData, imgSrc: e.target.value})} />
-                      <Input placeholder="Live Link" value={projData.link} onChange={e => setProjData({...projData, link: e.target.value})} />
+                      <Input placeholder="Unsplash URL" value={projData.imgSrc} onChange={e => setProjData({ ...projData, imgSrc: e.target.value })} />
+                      <Input placeholder="Live Link" value={projData.link} onChange={e => setProjData({ ...projData, link: e.target.value })} />
                     </>
                   ) : (
                     <>
-                      <Input placeholder="Duration (e.g. 2026 — Present)" value={timeData.year} onChange={e => setTimeData({...timeData, year: e.target.value})} />
-                      <Input placeholder="Skills Tags (CSV)" value={timeData.tags} onChange={e => setTimeData({...timeData, tags: e.target.value})} />
+                      <Input placeholder="Duration (e.g. 2026 — Present)" value={timeData.year} onChange={e => setTimeData({ ...timeData, year: e.target.value })} />
+                      <Input placeholder="Skills Tags (CSV)" value={timeData.tags} onChange={e => setTimeData({ ...timeData, tags: e.target.value })} />
                     </>
                   )}
 
-                  <textarea 
+                  <textarea
                     className="md:col-span-2 flex w-full rounded-2xl border border-border-subtle bg-transparent px-4 py-3 text-sm min-h-[120px] focus:ring-2 focus:ring-brand-primary outline-none"
                     placeholder="Engineering breakdown..."
                     value={activeTab === 'projects' ? projData.description : timeData.description}
-                    onChange={e => activeTab === 'projects' ? setProjData({...projData, description: e.target.value}) : setTimeData({...timeData, description: e.target.value})}
+                    onChange={e => activeTab === 'projects' ? setProjData({ ...projData, description: e.target.value }) : setTimeData({ ...timeData, description: e.target.value })}
                   />
-                  
+
                   <Button type="submit" className="md:col-span-2 rounded-2xl h-12 uppercase font-black tracking-widest" disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : editingId ? "Save Modifications" : "Commit Record"}
                   </Button>
