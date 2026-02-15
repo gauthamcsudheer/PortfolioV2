@@ -12,7 +12,17 @@ const app = express();
 
 // --- Global Middleware ---
 app.use(morgan('dev')); 
-app.use(cors()); // In production, configure this to only allow your domain
+
+// backend/app.js
+app.use(cors({
+  origin: [
+    'http://localhost:5173', 
+    'https://portfolio-v2-ashy-two-56.vercel.app/' // Add your actual Vercel URL here
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'x-auth-token']
+}));
+
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
