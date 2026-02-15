@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, ShieldCheck } from 'lucide-react';
 
+// --- Import the dynamic base URL ---
+import { API_BASE_URL } from "@/lib/api";
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +22,8 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      // Updated to use the dynamic API_BASE_URL constant
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -28,8 +32,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token); // Store the key to your Command Center
-        navigate('/admin'); // Boot to admin
+        localStorage.setItem('token', data.token); // Store the JWT to your Command Center
+        navigate('/admin'); // Redirect to authorized admin zone
       } else {
         setError(data.message || 'Authentication failed');
       }
@@ -47,7 +51,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4">
             <ShieldCheck size={24} />
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tighter">Authorized Access</h1>
+          <h1 className="text-2xl font-black uppercase tracking-tighter text-text-main">Authorized Access</h1>
           <p className="text-text-muted text-xs font-mono mt-1 italic">GCS. Portfolio Management</p>
         </div>
 
@@ -74,7 +78,7 @@ export default function LoginPage() {
           
           {error && <p className="text-red-500 text-[10px] font-bold text-center uppercase tracking-tighter">{error}</p>}
           
-          <Button type="submit" className="w-full h-12 rounded-xl" disabled={loading}>
+          <Button type="submit" className="w-full h-12 rounded-xl uppercase font-black tracking-widest" disabled={loading}>
             {loading ? <Loader2 className="animate-spin" /> : "Verify Identity"}
           </Button>
         </form>

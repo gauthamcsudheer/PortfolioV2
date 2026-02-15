@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ProjectCard } from "@/components/ui/project-card";
+// --- Import the dynamic base URL ---
+import { API_BASE_URL } from "@/lib/api";
 
 // Define the Project type based on your Mongoose Schema
 interface Project {
@@ -21,10 +23,13 @@ export default function ProjectsSection() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/projects");
+        // Updated to use the dynamic API_BASE_URL constant
+        const response = await fetch(`${API_BASE_URL}/projects`);
         if (!response.ok) throw new Error("Failed to fetch projects");
+        
         const data = await response.json();
-        // The backend already sorts by orderIndex, but we'll ensure it here
+        
+        // Ensure data is sorted by orderIndex for the correct display hierarchy
         setProjects(data.sort((a: Project, b: Project) => a.orderIndex - b.orderIndex));
       } catch (err) {
         console.error("Project fetch error:", err);
@@ -43,7 +48,6 @@ export default function ProjectsSection() {
           <h2 className="text-3xl font-black tracking-tighter uppercase text-text-main">
             Selected Builds
           </h2>
-          {/* <div className="h-1 w-20 bg-brand-primary mt-2 rounded-full" /> */}
         </div>
 
         {loading ? (

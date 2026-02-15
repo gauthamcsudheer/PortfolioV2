@@ -26,6 +26,9 @@ import {
   Loader2, Edit2, GraduationCap, History, LogOut
 } from "lucide-react";
 
+// --- Import the dynamic base URL ---
+import { API_BASE_URL } from "@/lib/api";
+
 // --- Sortable Item Component ---
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -82,10 +85,11 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
+      // Updated with API_BASE_URL
       const [p, t, c] = await Promise.all([
-        fetch("http://localhost:3000/api/projects"),
-        fetch("http://localhost:3000/api/experience"),
-        fetch("http://localhost:3000/api/contacts", {
+        fetch(`${API_BASE_URL}/projects`),
+        fetch(`${API_BASE_URL}/experience`),
+        fetch(`${API_BASE_URL}/contacts`, {
           headers: { "x-auth-token": token || "" }
         }),
       ]);
@@ -121,7 +125,8 @@ export default function AdminPage() {
     setLoading(true);
     const isProj = activeTab === 'projects';
 
-    const url = `http://localhost:3000/api/${isProj ? 'projects' : 'experience'}${editingId ? `/${editingId}` : ''}`;
+    // Updated with API_BASE_URL
+    const url = `${API_BASE_URL}/${isProj ? 'projects' : 'experience'}${editingId ? `/${editingId}` : ''}`;
     const method = editingId ? "PUT" : "POST";
 
     const body = isProj ? {
@@ -148,7 +153,8 @@ export default function AdminPage() {
 
   const handleDelete = async (id: string, endpoint: string) => {
     if (!window.confirm("Confirm deletion?")) return;
-    const res = await fetch(`http://localhost:3000/api/${endpoint}/${id}`, {
+    // Updated with API_BASE_URL
+    const res = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders()
     });
@@ -164,27 +170,24 @@ export default function AdminPage() {
     const oldIdx = list.findIndex(i => i._id === active.id);
     const newIdx = list.findIndex(i => i._id === over.id);
 
-    // 1. Update UI immediately for "Optimistic" feel
     const newOrder = arrayMove(list, oldIdx, newIdx);
     type === 'projects' ? setProjects(newOrder) : setTimeline(newOrder);
 
-    // 2. Map the new order to a simple ID -> Index array
     const orderMapping = newOrder.map((item, index) => ({
       id: item._id,
       index: index
     }));
 
-    // 3. Persist to Database
     try {
       const endpoint = type === 'projects' ? 'projects' : 'experience';
-      const res = await fetch(`http://localhost:3000/api/${endpoint}/reorder`, {
+      // Updated with API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/${endpoint}/reorder`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ orders: orderMapping }),
       });
 
       if (!res.ok) {
-        // If server fails, refresh data to revert UI to last known state
         fetchData();
         console.error("Reorder failed on server");
       }

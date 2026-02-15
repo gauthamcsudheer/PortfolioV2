@@ -3,6 +3,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import { TimelineContent } from "@/components/ui/timeline-animation";
 import { cn } from "@/lib/utils";
+// --- Import the dynamic base URL configuration ---
+import { API_BASE_URL } from "@/lib/api";
 
 // --- Types ---
 interface Milestone {
@@ -65,9 +67,14 @@ export default function ExperienceSection() {
   useEffect(() => {
     const fetchTimeline = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/experience");
+        // Updated to use the dynamic API_BASE_URL constant
+        const response = await fetch(`${API_BASE_URL}/experience`);
+        
+        if (!response.ok) throw new Error("Timeline sync failed");
+        
         const data = await response.json();
-        // Sorting by orderIndex as defined in your Admin panel
+        
+        // Sorting by orderIndex ensures the hierarchy set in the Admin panel is preserved
         setMilestones(data.sort((a: Milestone, b: Milestone) => a.orderIndex - b.orderIndex));
       } catch (err) {
         console.error("Timeline sync error:", err);

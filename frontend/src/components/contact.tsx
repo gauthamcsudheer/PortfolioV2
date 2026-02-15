@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 
+// --- Import the dynamic base URL configuration ---
+import { API_BASE_URL } from "@/lib/api";
+
 interface ContactSectionProps {
   title?: string;
   mainMessage?: string;
@@ -51,7 +54,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     setStatus('loading');
 
     try {
-      const response = await fetch("http://localhost:3000/api/contacts", {
+      // Updated to use the dynamic API_BASE_URL constant
+      const response = await fetch(`${API_BASE_URL}/contacts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -145,14 +149,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <Button 
                     type="submit" 
                     disabled={status === 'loading'}
-                    className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl text-md transition-all flex items-center justify-center gap-2"
+                    className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black uppercase tracking-widest rounded-xl text-md transition-all flex items-center justify-center gap-2"
                   >
                     {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : null}
                     {status === 'loading' ? "Processing..." : "Send Architecture Request"}
                   </Button>
                   
                   {status === 'error' && (
-                    <p className="text-red-500 text-xs font-bold text-center">Transmission failed. Please try again or email directly.</p>
+                    <p className="text-red-500 text-xs font-bold text-center uppercase tracking-tighter">Transmission failed. Please try again or email directly.</p>
                   )}
                 </form>
               </>
