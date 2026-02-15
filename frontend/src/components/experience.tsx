@@ -1,8 +1,20 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { TimelineContent } from "@/components/ui/timeline-animation";
 import { cn } from "@/lib/utils";
+
+// --- Types ---
+interface Milestone {
+  _id: string;
+  type: 'work' | 'education';
+  year: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  tags: string[];
+  orderIndex: number;
+}
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-3xl font-black tracking-tighter uppercase mb-16 text-text-main">
@@ -17,7 +29,7 @@ const ExperienceCard = ({ year, title, subtitle, description, tags, timelineRef,
     timelineRef={timelineRef}
     className="group relative pl-8 pb-16 border-l border-border-subtle last:pb-0"
   >
-    {/* Architectural Node - Adjusted top-1.5 (6px) to align with the center of 10px text */}
+    {/* Architectural Node */}
     <div className="absolute left-[-5px] top-[0px] w-[9px] h-[9px] bg-brand-primary rounded-full transition-transform group-hover:scale-150 shadow-[0_0_10px_var(--color-brand-primary)] z-10" />
     
     <div className="flex flex-col">
@@ -47,6 +59,28 @@ const ExperienceCard = ({ year, title, subtitle, description, tags, timelineRef,
 
 export default function ExperienceSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/experience");
+        const data = await response.json();
+        // Sorting by orderIndex as defined in your Admin panel
+        setMilestones(data.sort((a: Milestone, b: Milestone) => a.orderIndex - b.orderIndex));
+      } catch (err) {
+        console.error("Timeline sync error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTimeline();
+  }, []);
+
+  const workExperience = milestones.filter(m => m.type === 'work');
+  const educationHistory = milestones.filter(m => m.type === 'education');
 
   return (
     <section id="experience" className="mt-12 py-24 px-6 bg-bg-page transition-colors duration-300" ref={sectionRef}>
@@ -56,15 +90,18 @@ export default function ExperienceSection() {
         <div>
           <SectionTitle>Experience</SectionTitle>
           <div className="space-y-0">
-            <ExperienceCard 
-              animationNum={0}
-              timelineRef={sectionRef}
-              year="2026 — PRESENT"
-              title="Digital Specialist Engineer"
-              subtitle="Infosys"
-              description="Engineering specialized web solutions with a focus on full-stack architecture and machine intelligence integration. Optimizing enterprise-grade systems for performance and scalability."
-              tags={["MERN Stack", "TypeScript", "System Design"]}
-            />
+            {loading ? (
+              <div className="h-32 w-full bg-border-subtle/10 animate-pulse rounded-xl" />
+            ) : (
+              workExperience.map((item, index) => (
+                <ExperienceCard 
+                  key={item._id}
+                  animationNum={index}
+                  timelineRef={sectionRef}
+                  {...item}
+                />
+              ))
+            )}
           </div>
         </div>
 
@@ -72,15 +109,18 @@ export default function ExperienceSection() {
         <div>
           <SectionTitle>Education</SectionTitle>
           <div className="space-y-0">
-            <ExperienceCard 
-              animationNum={1}
-              timelineRef={sectionRef}
-              year="2020 — 2024"
-              title="B.Tech Computer Science & Engineering"
-              subtitle="Rajagiri School of Engineering & Technology"
-              description="Graduated with high honors, focusing on machine intelligence and scalable computing systems. Actively led technical student initiatives as Secretary of the ACM student chapter."
-              tags={["9.24 CGPA", "Honours in ML", "ACM Secretary"]}
-            />
+            {loading ? (
+              <div className="h-32 w-full bg-border-subtle/10 animate-pulse rounded-xl" />
+            ) : (
+              educationHistory.map((item, index) => (
+                <ExperienceCard 
+                  key={item._id}
+                  animationNum={index + workExperience.length}
+                  timelineRef={sectionRef}
+                  {...item}
+                />
+              ))
+            )}
           </div>
         </div>
 
