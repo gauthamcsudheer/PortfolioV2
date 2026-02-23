@@ -21,7 +21,7 @@ interface ContactSectionProps {
 export const ContactSection: React.FC<ContactSectionProps> = ({
   title = "Ready to architect your next digital breakthrough?",
   mainMessage = "Let's connect! ⚡",
-  contactEmail = "gautham@example.com", 
+  contactEmail = "csgautham091003@gmail.com", 
   backgroundImageSrc = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop",
 }) => {
   const [formData, setFormData] = useState({
