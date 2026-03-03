@@ -14,6 +14,7 @@ import { StackedCircularFooter } from './components/ui/stacked-circular-footer';
 import LoginPage from './pages/Login';
 import AdminPage from './pages/Admin';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import NotFound from './pages/NotFound';
 
 /**
  * Main Portfolio Layout
@@ -47,6 +48,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
