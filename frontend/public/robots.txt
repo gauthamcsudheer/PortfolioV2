@@ -1,0 +1,10 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Keep your Admin and Login areas private from search results
+Disallow: /admin
+Disallow: /login
+
+# Direct bots to your sitemap (if you create one later)
+Sitemap: https://gauthamcsudheer.com/sitemap.xml
